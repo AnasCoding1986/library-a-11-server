@@ -29,6 +29,22 @@ async function run() {
     const spotCollection = client.db('spotDB').collection('spot');
     const categoryCollection = client.db('spotDB').collection('categories');
     const countriesCollection = client.db('spotDB').collection('countries');
+    // booksCollection
+    const booksCollection = client.db('libraryBooks').collection('books');
+
+    // Library Books Cruds Operations
+    app.get('/books', async(req,res) => {
+      const cursor = booksCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post('/books', async (req, res) => {
+      const newBook = req.body;
+      console.log(newBook);
+      const result = await booksCollection.insertOne(newBook);
+      res.send(result)
+    })
 
     app.get('/spot', async (req, res) => {
       const cursor = spotCollection.find();
@@ -122,7 +138,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-  res.send('Tourism working')
+  res.send('Library working')
 })
 
 app.listen(port, () => {
