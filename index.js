@@ -67,7 +67,7 @@ async function run() {
           rating: updatedBook.rating,
         }
       }
-      const result = await spotCollection.updateOne(filter,book,options);
+      const result = await booksCollection.updateOne(filter,book,options);
       res.send(result);
     })
 
