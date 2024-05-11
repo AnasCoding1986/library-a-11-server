@@ -53,6 +53,26 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/books/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id : new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedBook = req.body;
+      const book = {
+        $set: {
+          photo: updatedBook.photo,
+          bookName: updatedBook.bookName,
+          authorName: updatedBook.authorName,
+          category: updatedBook.category,
+          rating: updatedBook.rating,
+        }
+      }
+      const result = await spotCollection.updateOne(filter,book,options);
+      res.send(result);
+    })
+
+
+
     app.get('/spot', async (req, res) => {
       const cursor = spotCollection.find();
       const result = await cursor.toArray();
