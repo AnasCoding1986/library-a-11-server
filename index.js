@@ -61,8 +61,8 @@ async function run() {
       const book = {
         $set: {
           photo: updatedBook.photo,
-          bookName: updatedBook.bookName,
-          authorName: updatedBook.authorName,
+          name: updatedBook.name,
+          author: updatedBook.author,
           category: updatedBook.category,
           rating: updatedBook.rating,
         }
