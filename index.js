@@ -31,6 +31,7 @@ async function run() {
     const countriesCollection = client.db('spotDB').collection('countries');
     // booksCollection
     const booksCollection = client.db('libraryBooks').collection('books');
+    const borrowedBooksCollection = client.db('libraryBooks').collection('borrowedBooks');
 
     // Library Books Cruds Operations
     app.get('/books', async(req,res) => {
