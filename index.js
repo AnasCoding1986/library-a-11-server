@@ -34,6 +34,7 @@ async function run() {
     const borrowedBooksCollection = client.db('libraryBooks').collection('borrowedBooks');
 
     // Library Books Cruds Operations
+    // Books
     app.get('/books', async(req,res) => {
       const cursor = booksCollection.find();
       const result = await cursor.toArray();
@@ -59,6 +60,11 @@ async function run() {
       const filter = { _id : new ObjectId(id) };
       const options = { upsert: true };
       const updatedBook = req.body;
+      const bookTwo = {
+        $inc: {
+          quantity: -1,
+        }
+      }
       const book = {
         $set: {
           photo: updatedBook.photo,
@@ -66,11 +72,47 @@ async function run() {
           author: updatedBook.author,
           category: updatedBook.category,
           rating: updatedBook.rating,
+          quantity: updatedBook.quantity,
         }
       }
-      const result = await booksCollection.updateOne(filter,book,options);
+      const result = await booksCollection.updateOne(filter,bookTwo);
       res.send(result);
     })
+
+
+    // BorrowedBooks
+
+    app.get('/borrowedBooks', async(req,res) => {
+      const cursor = borrowedBooksCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post('/borrowedBooks', async (req, res) => {
+      const newBook = req.body;
+      console.log(newBook);
+      const result = await borrowedBooksCollection.insertOne(newBook);
+      const filter = { _id : new ObjectId(req.body.bookId) };
+      const bookTwo = {
+        $inc: {
+          quantity: -1,
+        }
+      }
+      const resultTwo = await booksCollection.updateOne(filter,bookTwo);
+      res.send({result,resultTwo})
+    })
+
+    app.delete('/borrowedBooks/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await borrowedBooksCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+
+
 
 
 
