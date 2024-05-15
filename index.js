@@ -1,13 +1,19 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middlewire
-app.use(cors({origin: ["http://localhost:5173", "https://tourism-6b17e.web.app"]}));
+app.use(cors({
+  origin: ["http://localhost:5173"],
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zdajqzn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -26,16 +32,33 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const spotCollection = client.db('spotDB').collection('spot');
-    const categoryCollection = client.db('spotDB').collection('categories');
-    const countriesCollection = client.db('spotDB').collection('countries');
+    // const spotCollection = client.db('spotDB').collection('spot');
+    // const categoryCollection = client.db('spotDB').collection('categories');
+    // const countriesCollection = client.db('spotDB').collection('countries');
     // booksCollection
     const booksCollection = client.db('libraryBooks').collection('books');
     const borrowedBooksCollection = client.db('libraryBooks').collection('borrowedBooks');
 
+
+    // auth related
+
+    app.post('/jwt', async(req,res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
+      res
+      .cookie('token', token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "none",
+      })
+      .send({success: true});
+    })
+
     // Library Books Cruds Operations
     // Books
     app.get('/books', async(req,res) => {
+      console.log('tt token', req.cookies.token);
       const cursor = booksCollection.find();
       const result = await cursor.toArray();
       res.send(result);
