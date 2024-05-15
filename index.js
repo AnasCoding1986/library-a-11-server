@@ -1,19 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middlewire
-app.use(cors({
-  origin: ["http://localhost:5173"],
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zdajqzn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -27,22 +21,6 @@ const client = new MongoClient(uri, {
   }
 });
 
-// self created middlewire
-const logger = async(req,res,next) => {
-  console.log('called', req.host, req.originalUrl);
-  next();
-}
-
-const verifyToken = async(req,res,next) => {
-  const token = req?.cookies?.token;
-  console.log('value of token in middlewire', token);
-
-  if (!token) {
-    return res.status(401).send({message: 'not authorised'})
-  }
-
-  next();
-}
 
 
 async function run() {
@@ -50,33 +28,14 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    // const spotCollection = client.db('spotDB').collection('spot');
-    // const categoryCollection = client.db('spotDB').collection('categories');
-    // const countriesCollection = client.db('spotDB').collection('countries');
     // booksCollection
     const booksCollection = client.db('libraryBooks').collection('books');
     const borrowedBooksCollection = client.db('libraryBooks').collection('borrowedBooks');
 
 
-    // auth related
-
-    app.post('/jwt',logger, async(req,res) => {
-      const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
-      res
-      .cookie('token', token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "none",
-      })
-      .send({success: true});
-    })
-
     // Library Books Cruds Operations
     // Books
-    app.get('/books',logger, async(req,res) => {
-      console.log('tt token', req.cookies.token);
+    app.get('/books', async(req,res) => {
       const cursor = booksCollection.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -101,11 +60,6 @@ async function run() {
       const filter = { _id : new ObjectId(id) };
       const options = { upsert: true };
       const updatedBook = req.body;
-      const bookTwo = {
-        $inc: {
-          quantity: -1,
-        }
-      }
       const book = {
         $set: {
           photo: updatedBook.photo,
@@ -116,9 +70,10 @@ async function run() {
           quantity: updatedBook.quantity,
         }
       }
-      const result = await booksCollection.updateOne(filter,bookTwo);
+      const result = await booksCollection.updateOne(filter,book,options);
       res.send(result);
     })
+
 
 
     // BorrowedBooks
@@ -133,15 +88,9 @@ async function run() {
       const newBook = req.body;
       console.log(newBook);
       const result = await borrowedBooksCollection.insertOne(newBook);
-      const filter = { _id : new ObjectId(req.body.bookId) };
-      const bookTwo = {
-        $inc: {
-          quantity: -1,
-        }
-      }
-      const resultTwo = await booksCollection.updateOne(filter,bookTwo);
-      res.send({result,resultTwo})
+      res.send(result)
     })
+
 
     app.delete('/borrowedBooks/:id', async (req, res) => {
       const id = req.params.id;
@@ -151,88 +100,6 @@ async function run() {
       res.send(result);
     })
 
-
-
-
-
-
-
-    app.get('/spot', async (req, res) => {
-      const cursor = spotCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
-
-    app.get('/spot/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const spot = await spotCollection.findOne(query);
-      res.send(spot)
-    })
-
-    app.get('/categories', async (req, res) => {
-      const cursor = categoryCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
-
-    app.get('/categories/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const spot = await categoryCollection.findOne(query);
-      res.send(spot)
-    })
-
-    app.get('/countries', async (req, res) => {
-      const cursor = countriesCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
-
-    app.get('/countries/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const spot = await countriesCollection.findOne(query);
-      res.send(spot)
-    })
-
-    app.post('/spot', async (req, res) => {
-      const newSpot = req.body;
-      console.log(newSpot);
-      const result = await spotCollection.insertOne(newSpot);
-      res.send(result)
-    })
-
-    app.put('/spot/:id', async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id : new ObjectId(id) };
-      const options = { upsert: true };
-      const updatedSpot = req.body;
-      const spot = {
-        $set: {
-          photo: updatedSpot.photo,
-          touristsSpotName: updatedSpot.touristsSpotName,
-          country: updatedSpot.country,
-          location: updatedSpot.location,
-          cost: updatedSpot.cost,
-          description: updatedSpot.description,
-          email: updatedSpot.email,
-          name: updatedSpot.name, seasonality: updatedSpot.seasonality,
-          totaVisitorsPerYear: updatedSpot.totaVisitorsPerYear,
-          travelTime: updatedSpot.travelTime,
-        }
-      }
-      const result = await spotCollection.updateOne(filter,spot,options);
-      res.send(result);
-    })
-
-    app.delete('/spot/:id', async (req, res) => {
-      const id = req.params.id;
-      console.log(id);
-      const query = { _id: new ObjectId(id) };
-      const result = await spotCollection.deleteOne(query);
-      res.send(result);
-    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
