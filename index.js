@@ -27,6 +27,24 @@ const client = new MongoClient(uri, {
   }
 });
 
+// self created middlewire
+const logger = async(req,res,next) => {
+  console.log('called', req.host, req.originalUrl);
+  next();
+}
+
+const verifyToken = async(req,res,next) => {
+  const token = req?.cookies?.token;
+  console.log('value of token in middlewire', token);
+
+  if (!token) {
+    return res.status(401).send({message: 'not authorised'})
+  }
+
+  next();
+}
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -42,7 +60,7 @@ async function run() {
 
     // auth related
 
-    app.post('/jwt', async(req,res) => {
+    app.post('/jwt',logger, async(req,res) => {
       const user = req.body;
       console.log(user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
@@ -57,7 +75,7 @@ async function run() {
 
     // Library Books Cruds Operations
     // Books
-    app.get('/books', async(req,res) => {
+    app.get('/books',logger, async(req,res) => {
       console.log('tt token', req.cookies.token);
       const cursor = booksCollection.find();
       const result = await cursor.toArray();
