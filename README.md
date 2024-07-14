@@ -2,13 +2,13 @@ BOOKSHELFXCHANGE
 Welcome to BOOKSHELFXCHANGE, a comprehensive tourism management website dedicated to showcasing notable tourist spots within a specific category. This project focuses on creating a dynamic and responsive platform where users can explore and manage information about various tourist destinations.
 
 Live Site
-BOOKSHELFXCHANGE
+https://startling-rolypoly-f9513d.netlify.app
 
 Client-side Repository
-GitHub - Client-side
+https://github.com/AnasCoding1986/library-a-11-client
 
 Server-side Repository
-GitHub - Server-side
+https://github.com/AnasCoding1986/library-a-11-server
 
 Features
 Responsive Design: The website is fully responsive, ensuring a seamless experience across mobile, tablet, and desktop devices.
